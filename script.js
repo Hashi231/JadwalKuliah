@@ -75,10 +75,9 @@ function addDays(date, days) {
 }
 
 function loadData(key, fallback) {
-  const raw = localStorage.getItem(key);
-  if (!raw) return fallback;
-
   try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
     return JSON.parse(raw);
   } catch {
     return fallback;
@@ -86,7 +85,43 @@ function loadData(key, fallback) {
 }
 
 function saveData(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function normalizeCredential(value) {
+  return String(value ?? '').trim().replace(/\s+/g, ' ');
+}
+
+async function apiRequest(path, options = {}) {
+  const token = localStorage.getItem('studyflow-token');
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(path, {
+    ...options,
+    headers,
+  });
+
+  const contentType = response.headers.get('content-type') || '';
+  const payload = contentType.includes('application/json') ? await response.json() : await response.text();
+
+  if (!response.ok) {
+    const message = typeof payload === 'object' && payload ? payload.message || 'Permintaan gagal.' : 'Permintaan gagal.';
+    throw new Error(message);
+  }
+
+  return payload;
 }
 
 function normalizeSchedule(schedule) {
@@ -471,7 +506,7 @@ function getUsers() {
 }
 
 function saveUsers(users) {
-  saveData(STORAGE_KEYS.users, users);
+  return saveData(STORAGE_KEYS.users, users);
 }
 
 function setAuthMessage(message, isSuccess = false) {
@@ -492,81 +527,80 @@ function handleAuthTabClick(event) {
   switchAuthMode(tab.dataset.authMode);
 }
 
-function handleRegister(event) {
+async function handleRegister(event) {
   event.preventDefault();
 
-  const username = document.getElementById('registerUsername').value.trim();
-  const fullName = document.getElementById('registerFullName').value.trim();
-  const university = document.getElementById('registerUniversity').value.trim();
-  const nim = document.getElementById('registerNim').value.trim();
+  const username = normalizeCredential(document.getElementById('registerUsername').value);
+  const fullName = normalizeCredential(document.getElementById('registerFullName').value);
+  const university = normalizeCredential(document.getElementById('registerUniversity').value);
+  const nim = normalizeCredential(document.getElementById('registerNim').value);
 
   if (!username || !fullName || !university || !nim) {
     setAuthMessage('Semua field harus diisi, termasuk universitas.');
     return;
   }
 
-  const users = getUsers();
-  const existingUser = users.find((user) => user.username.toLowerCase() === username.toLowerCase());
+  try {
+    const response = await apiRequest('/api/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, fullName, university, password: nim }),
+    });
 
-  if (existingUser) {
-    setAuthMessage('Username sudah dipakai, pilih yang lain.');
-    return;
+    setAuthMessage('Registrasi berhasil, silakan login.', true);
+    registerForm.reset();
+    switchAuthMode('login');
+    if (response && response.user) {
+      localStorage.setItem('studyflow-last-user', response.user.username || username);
+    }
+  } catch (error) {
+    setAuthMessage(error.message || 'Registrasi gagal. Coba lagi.');
   }
-
-  users.push({
-    username,
-    fullName,
-    university,
-    password: nim,
-  });
-  saveUsers(users);
-
-  setAuthMessage('Registrasi berhasil, silakan login.', true);
-  registerForm.reset();
-  switchAuthMode('login');
 }
 
-function handleLogin(event) {
+async function handleLogin(event) {
   event.preventDefault();
 
-  const username = document.getElementById('loginUsername').value.trim();
-  const password = document.getElementById('loginPassword').value.trim();
+  const username = normalizeCredential(document.getElementById('loginUsername').value);
+  const password = normalizeCredential(document.getElementById('loginPassword').value);
 
   if (!username || !password) {
     setAuthMessage('Username dan password harus diisi.');
     return;
   }
 
-  const users = getUsers();
-  const matchedUser = users.find(
-    (user) => user.username.toLowerCase() === username.toLowerCase() && user.password === password,
-  );
+  try {
+    const response = await apiRequest('/api/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
 
-  if (!matchedUser) {
-    setAuthMessage('Username atau password salah.');
-    return;
+    const nextUser = {
+      username: response.user.username,
+      fullName: response.user.fullName,
+      university: response.user.university || 'Universitas Islam Negeri Jakarta',
+    };
+
+    localStorage.setItem('studyflow-token', response.token);
+    localStorage.setItem(STORAGE_KEYS.currentUser, JSON.stringify(nextUser));
+    localStorage.setItem('studyflow-last-user', nextUser.username);
+
+    authScreen.classList.add('hidden');
+    appShell.classList.remove('hidden');
+    welcomeText.textContent = `Halo, ${nextUser.fullName}!`;
+    if (universityTitle) {
+      universityTitle.textContent = nextUser.university;
+    }
+    loginForm.reset();
+    setAuthMessage('');
+  } catch (error) {
+    setAuthMessage(error.message || 'Username atau password salah.');
   }
-
-  const nextUser = {
-    username: matchedUser.username,
-    fullName: matchedUser.fullName,
-    university: matchedUser.university || 'Universitas Islam Negeri Jakarta',
-  };
-
-  saveData(STORAGE_KEYS.currentUser, nextUser);
-
-  authScreen.classList.add('hidden');
-  appShell.classList.remove('hidden');
-  welcomeText.textContent = `Halo, ${matchedUser.fullName}!`;
-  if (universityTitle) {
-    universityTitle.textContent = nextUser.university;
-  }
-  loginForm.reset();
-  setAuthMessage('');
 }
 
 function handleLogout() {
   localStorage.removeItem(STORAGE_KEYS.currentUser);
+  localStorage.removeItem('studyflow-token');
+  localStorage.removeItem('studyflow-last-user');
   authScreen.classList.remove('hidden');
   appShell.classList.add('hidden');
   loginForm.reset();
@@ -575,20 +609,46 @@ function handleLogout() {
   switchAuthMode('login');
 }
 
-function restoreSession() {
+async function restoreSession() {
   const currentUser = loadData(STORAGE_KEYS.currentUser, null);
+  const token = localStorage.getItem('studyflow-token');
 
-  if (!currentUser) {
-    appShell.classList.add('hidden');
-    authScreen.classList.remove('hidden');
+  if (!token) {
+    if (!currentUser) {
+      appShell.classList.add('hidden');
+      authScreen.classList.remove('hidden');
+      return;
+    }
+
+    appShell.classList.remove('hidden');
+    authScreen.classList.add('hidden');
+    welcomeText.textContent = `Halo, ${currentUser.fullName}!`;
+    if (universityTitle) {
+      universityTitle.textContent = currentUser.university || 'Universitas Islam Negeri Jakarta';
+    }
     return;
   }
 
-  authScreen.classList.add('hidden');
-  appShell.classList.remove('hidden');
-  welcomeText.textContent = `Halo, ${currentUser.fullName}!`;
-  if (universityTitle) {
-    universityTitle.textContent = currentUser.university || 'Universitas Islam Negeri Jakarta';
+  try {
+    const response = await apiRequest('/api/me');
+    const nextUser = {
+      username: response.user.username,
+      fullName: response.user.fullName,
+      university: response.user.university || 'Universitas Islam Negeri Jakarta',
+    };
+
+    saveData(STORAGE_KEYS.currentUser, nextUser);
+    authScreen.classList.add('hidden');
+    appShell.classList.remove('hidden');
+    welcomeText.textContent = `Halo, ${nextUser.fullName}!`;
+    if (universityTitle) {
+      universityTitle.textContent = nextUser.university;
+    }
+  } catch {
+    localStorage.removeItem('studyflow-token');
+    localStorage.removeItem(STORAGE_KEYS.currentUser);
+    appShell.classList.add('hidden');
+    authScreen.classList.remove('hidden');
   }
 }
 
