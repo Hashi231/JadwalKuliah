@@ -1,0 +1,40 @@
+<svg width="640" height="440" viewBox="0 0 640 440" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="globeGrad" x1="180" y1="40" x2="420" y2="280" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#12C2FF"/>
+      <stop offset="1" stop-color="#0E5DBD"/>
+    </linearGradient>
+    <linearGradient id="bookGrad" x1="110" y1="235" x2="530" y2="395" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1A8E47"/>
+      <stop offset="1" stop-color="#0A6D35"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <g>
+      <path d="M137 150C176 63 273 21 363 34C462 48 543 117 522 199C505 270 437 310 355 305C278 300 183 245 137 150Z" fill="url(#globeGrad)"/>
+      <circle cx="334" cy="171" r="130" fill="url(#globeGrad)"/>
+      <path d="M212 132C286 109 359 104 469 121" stroke="#E6C459" stroke-width="9" stroke-linecap="round"/>
+      <path d="M211 213C270 245 353 255 470 228" stroke="#E6C459" stroke-width="9" stroke-linecap="round"/>
+      <path d="M300 78C248 99 215 142 206 179C197 219 209 257 246 279C310 317 394 290 420 230C441 182 425 111 373 80C345 63 318 64 300 78Z" fill="none" stroke="#E6C459" stroke-width="8" stroke-linecap="round"/>
+      <path d="M379 79C436 104 491 140 494 202C497 255 459 293 389 307C321 321 264 286 232 243" fill="none" stroke="#E6C459" stroke-width="8" stroke-linecap="round"/>
+      <path d="M270 109C311 120 339 144 347 179C356 216 338 247 291 269" fill="none" stroke="#E6C459" stroke-width="8" stroke-linecap="round"/>
+    </g>
+
+    <g>
+      <path d="M120 245H520C532 245 542 255 542 267V294C542 306 532 316 520 316H120C108 316 98 306 98 294V267C98 255 108 245 120 245Z" fill="url(#bookGrad)"/>
+      <path d="M122 237H518C530 237 540 247 540 259V275H100V259C100 247 110 237 122 237Z" fill="#0C7A38"/>
+      <path d="M108 235H532V290C532 305 520 316 505 316H135C120 316 108 305 108 290V235Z" fill="#F3F6F9"/>
+      <path d="M118 235H532C545 235 555 245 555 258V291C555 306 544 318 529 318H121C106 318 95 306 95 291V258C95 245 105 235 118 235Z" fill="#F5F7FA" stroke="#0A6D35" stroke-width="8"/>
+      <path d="M175 232V318" stroke="#0B7E39" stroke-width="8"/>
+      <path d="M470 232V318" stroke="#0B7E39" stroke-width="8"/>
+      <path d="M145 262H494" stroke="#D6DDE4" stroke-width="10" stroke-linecap="round" opacity="0.8"/>
+
+      <text x="320" y="310" text-anchor="middle" font-size="170" font-weight="900" font-family="Arial Black, Impact, sans-serif" fill="#0D4EA8" letter-spacing="-12">UIN</text>
+      <path d="M116 315H528" stroke="#0B7E39" stroke-width="8" opacity="0.85"/>
+    </g>
+  </g>
+</svg>

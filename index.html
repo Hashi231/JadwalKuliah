@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StudyFlow Planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=20260926-1" />
+  </head>
+  <body>
+    <div id="authScreen" class="auth-screen">
+      <div class="auth-card">
+        <div class="auth-tabs" aria-label="Mode login register">
+          <button type="button" class="auth-tab active" data-auth-mode="login">Login</button>
+          <button type="button" class="auth-tab" data-auth-mode="register">Register</button>
+        </div>
+
+        <form id="loginForm" class="auth-form active" novalidate>
+          <label>
+            <span>Username</span>
+            <input id="loginUsername" type="text" placeholder="Masukkan username" required />
+          </label>
+
+          <label>
+            <span>Password</span>
+            <input id="loginPassword" type="password" placeholder="Masukkan NIM" required />
+          </label>
+
+          <button type="submit" class="primary-btn auth-submit">Masuk</button>
+        </form>
+
+        <form id="registerForm" class="auth-form" novalidate>
+          <label>
+            <span>Username</span>
+            <input id="registerUsername" type="text" placeholder="Buat username" required />
+          </label>
+
+          <label>
+            <span>Nama lengkap</span>
+            <input id="registerFullName" type="text" placeholder="Masukkan nama lengkap" required />
+          </label>
+
+          <label>
+            <span>Universitas</span>
+            <select id="registerUniversity" required>
+              <option value="">Pilih universitas</option>
+              <option value="Universitas Trisakti">Universitas Trisakti</option>
+              <option value="Universitas Budi Luhur">Universitas Budi Luhur</option>
+              <option value="Universitas Islam Negeri Jakarta">Universitas Islam Negeri Jakarta</option>
+              <option value="Universitas Negeri Jakarta">Universitas Negeri Jakarta</option>
+              <option value="Universitas Mercu Buana">Universitas Mercu Buana</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Password (NIM)</span>
+            <input id="registerNim" type="password" placeholder="Masukkan NIM" required />
+          </label>
+
+          <button type="submit" class="primary-btn auth-submit">Daftar</button>
+        </form>
+
+        <p id="authMessage" class="auth-message" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <div class="app-shell" id="appShell">
+      <header class="topbar">
+        <div class="title-wrap">
+          <p class="brand-kicker" id="welcomeText">Halo mahasigma!</p>
+          <h1 id="universityTitle">Universitas Islam Negeri Jakarta</h1>
+        </div>
+
+        <div class="header-actions">
+          <div class="header-status">
+            <div class="date-pill">
+              <span class="pill-icon">📅</span>
+              <span id="todayDate"></span>
+            </div>
+            <div class="time-pill">
+              <span class="pill-icon">⏰</span>
+              <span id="todayTime"></span>
+            </div>
+          </div>
+          <button class="small-btn" id="logoutBtn" type="button">Logout</button>
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <section class="overview" aria-label="Ringkasan statistik">
+          <article class="stat-card">
+            <span class="label">Mata kuliah</span>
+            <strong id="courseCount">0</strong>
+            <small>Minggu ini</small>
+          </article>
+          <article class="stat-card accent">
+            <span class="label">Tugas mendekati deadline</span>
+            <strong id="dueSoonCount">0</strong>
+            <small>Dalam 3 hari</small>
+          </article>
+          <article class="stat-card success">
+            <span class="label">Selesai</span>
+            <strong id="completedCount">0</strong>
+            <small>Tugas selesai</small>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <div class="panel schedule-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Jadwal mingguan</h2>
+              </div>
+              <button class="small-btn" id="addClassBtn" type="button">+ Tambah kelas</button>
+            </div>
+
+            <div id="scheduleGrid" class="schedule-grid" aria-live="polite"></div>
+          </div>
+
+          <div class="panel todo-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Daftar tugas</h2>
+              </div>
+            </div>
+
+            <form id="todoForm" class="todo-form">
+              <div class="field-row">
+                <label>
+                  <span>Tugas</span>
+                  <input id="taskTitle" type="text" placeholder="contoh: Selesaikan laporan praktikum kimia" required />
+                </label>
+              </div>
+
+              <div class="field-grid">
+                <label>
+                  <span>Mata kuliah</span>
+                  <input id="taskSubject" type="text" placeholder="contoh: Biologi" required />
+                </label>
+
+                <label>
+                  <span>Prioritas</span>
+                  <select id="taskPriority">
+                    <option value="High">Tinggi</option>
+                    <option value="Medium" selected>Sedang</option>
+                    <option value="Low">Rendah</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="field-grid">
+                <label>
+                  <span>Tenggat</span>
+                  <input id="taskDueDate" type="date" required />
+                </label>
+
+                <button class="primary-btn" type="submit">Tambah tugas</button>
+              </div>
+            </form>
+
+            <div class="filter-row" aria-label="Filter tugas">
+              <button class="filter-btn active" data-filter="all" type="button">Semua</button>
+              <button class="filter-btn" data-filter="pending" type="button">Belum selesai</button>
+              <button class="filter-btn" data-filter="done" type="button">Selesai</button>
+            </div>
+
+            <ul id="todoList" class="todo-list" aria-live="polite"></ul>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="scheduleModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-backdrop" data-close-modal="true"></div>
+      <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="scheduleModalTitle">
+        <div class="modal-header">
+          <h3 id="scheduleModalTitle">Tambah kelas</h3>
+          <button class="icon-btn" type="button" data-close-modal="true" aria-label="Tutup form">×</button>
+        </div>
+
+        <form id="scheduleForm" class="schedule-form">
+          <div class="field-grid">
+            <label>
+              <span>Hari</span>
+              <select id="scheduleDay" required>
+                <option value="Senin">Senin</option>
+                <option value="Selasa">Selasa</option>
+                <option value="Rabu">Rabu</option>
+                <option value="Kamis">Kamis</option>
+                <option value="Jumat">Jumat</option>
+                <option value="Sabtu">Sabtu</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Waktu</span>
+              <input id="scheduleTime" type="time" required />
+            </label>
+          </div>
+
+          <label>
+            <span>Mata kuliah</span>
+            <input id="scheduleSubject" type="text" placeholder="Contoh: Kalkulus I" required />
+          </label>
+
+          <div class="field-grid">
+            <label>
+              <span>Jenis</span>
+              <select id="scheduleType" required>
+                <option value="Kuliah">Kuliah</option>
+                <option value="Praktikum">Praktikum</option>
+                <option value="Seminar">Seminar</option>
+                <option value="Tutorial">Tutorial</option>
+                <option value="Workshop">Workshop</option>
+                <option value="Studio">Studio</option>
+                <option value="Tim">Tim</option>
+                <option value="Review">Review</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Ruangan</span>
+              <input id="scheduleRoom" type="text" placeholder="Contoh: A-201" required />
+            </label>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="secondary-btn" data-close-modal="true">Batal</button>
+            <button type="submit" class="primary-btn">Simpan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="script.js?v=20260926-1"></script>
+  </body>
+</html>
